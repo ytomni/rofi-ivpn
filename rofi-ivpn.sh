@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-# Function to get VPN status
+# get VPN status
 get_vpn_status() {
     local status_output
     status_output=$(ivpn status)
     
     if echo "$status_output" | grep -q "^VPN[[:space:]]*:[[:space:]]*CONNECTED"; then
-        # Extract country from the server info line
         local country
         country=$(echo "$status_output" | grep -A1 "^VPN[[:space:]]*:[[:space:]]*CONNECTED" | tail -n1 | sed -E 's/.*, ([^,]+)$/\1/')
         echo "CONNECTED $country"
@@ -15,7 +14,7 @@ get_vpn_status() {
     fi
 }
 
-# Function to get server list
+# get server list
 get_server_list() {
     ivpn servers | awk -F'|' '
         NR>1 {
@@ -28,19 +27,17 @@ get_server_list() {
     '
 }
 
-# Function to handle server selection
+# server selection
 handle_server_selection() {
     local selected
     selected=$(get_server_list | rofi -dmenu -p "Servers" -i)
     
     if [ -n "$selected" ]; then
-        # Get the full server list to extract hostname
         local protocol
         local location
         protocol=$(echo "$selected" | awk -F'|' '{print $1}' | xargs)
         location=$(echo "$selected" | awk -F'|' '{print $2}' | xargs)
         
-        # Find the matching server in the full list to get the hostname
         local hostname
         hostname=$(ivpn servers | awk -F'|' -v proto="$protocol" -v loc="$location" '
             NR>1 {
@@ -58,8 +55,6 @@ handle_server_selection() {
         fi
     fi
 }
-
-# Function to handle firewall menu
 handle_firewall_menu() {
     local firewall_status
     firewall_status=$(ivpn firewall -status)
@@ -98,7 +93,6 @@ handle_firewall_menu() {
     esac
 }
 
-# Main menu
 main_menu() {
     local status
     status=$(get_vpn_status)
@@ -129,5 +123,4 @@ main_menu() {
     esac
 }
 
-# Start the script
 main_menu
